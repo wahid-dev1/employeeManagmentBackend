@@ -1,18 +1,16 @@
-
-const db=require("./src/models/index")
-const { ApolloServer } = require('apollo-server');
-const typeDefs = require('./src/graphql/schema/schema.js');
-const resolvers = require('./src/graphql/resolver/resolvers.js');
+const { ApolloServer } = require('apollo-server-express');
+const express = require('express');
+const { graphqlUploadExpress } = require('graphql-upload');
+const typeDefs = require('./src/graphql/schema/schema');
+const resolvers = require('./src/graphql/resolver/resolvers');
+const { connectDB } = require('./src/models/index');
 const { authenticate } = require('./src/middleware/auth');
-const {connectDB} = require('./src/models/index.js');
+require('dotenv').config();
 
-//token for authentication
-require('./genrateToken.js')
-// env configuration
-require('dotenv').config()
-
-// db connection
 connectDB();
+
+const app = express();
+app.use(graphqlUploadExpress({ maxFileSize: 100000000000000, maxFiles: 10 }));
 
 const server = new ApolloServer({
   typeDefs,
@@ -28,6 +26,9 @@ const server = new ApolloServer({
   },
 });
 
-server.listen({ port: 4000 }).then(({ url }) => {
-  console.log(`Server ready at ${url}`);
+server.start().then(() => {
+  server.applyMiddleware({ app });
+  app.listen({ port: 4000 }, () => {
+    console.log(`Server ready at http://localhost:4000${server.graphqlPath}`);
+  });
 });

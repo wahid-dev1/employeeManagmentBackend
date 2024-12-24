@@ -1,6 +1,9 @@
 const { Op } = require('sequelize');
 const {Employee} = require('../../models/index');
 const { checkRole } = require('../../middleware/auth');
+const { GraphQLUpload } = require('graphql-upload');
+const fs = require('fs');
+const path = require('path');
 
 const resolvers = {
   Query: {
@@ -47,6 +50,26 @@ const resolvers = {
       const employee = await Employee.findByPk(id);
       if (!employee) throw new Error('Employee not found');
       return await employee.update(input);
+    },
+    uploadFile: async (_, { file }) => {
+      console.log('Uploading file');
+      file = await file;
+      
+      const { createReadStream, filename, mimetype, encoding } = file.file;
+      console.log(`File uploaded: ${filename}`);
+
+      const uploadPath = path.join(__dirname, '../../../uploads', filename);
+
+      console.log(`Uploading to: ${uploadPath}`);
+      await new Promise((resolve, reject) => {
+        const stream = createReadStream();
+        const out = fs.createWriteStream(uploadPath);
+        stream.pipe(out);
+        out.on('finish', resolve);
+        out.on('error', reject);
+      });
+
+      return { filename, mimetype, encoding };
     },
   },
 };

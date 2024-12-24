@@ -2,12 +2,14 @@
 const { gql } = require('apollo-server');
 
 const typeDefs = gql`
+ scalar FileUpload
   type Employee {
     id: ID!
     name: String!
     age: Int!
     class: String
     role: String!
+    file:File!
   }
 
   input EmployeeInput {
@@ -16,7 +18,12 @@ const typeDefs = gql`
     class: String
     role: String!
   }
-
+  
+  type File {
+    filename: String!
+    mimetype: String!
+    encoding: String!
+  }
   input EmployeeFilter {
     name: String
     class: String
@@ -41,6 +48,7 @@ const typeDefs = gql`
   type Mutation {
     addEmployee(input: EmployeeInput!): Employee
     updateEmployee(id: ID!, input: EmployeeInput!): Employee
+    uploadFile(file: FileUpload!): File!
   }
 `;
 
